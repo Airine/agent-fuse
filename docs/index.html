@@ -4,7 +4,57 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>AgentFS — Portable identity for AI agents</title>
-  <meta name="description" content="Mount your agent's soul, memory, and skills as a filesystem. Carry it across any environment with one command.">
+  <meta name="description" content="Mount your agent's soul, memory, and skills as a FUSE filesystem. One command carries your AI agent's identity across any environment — any machine, sandbox, or session.">
+  <meta name="keywords" content="AI agent, agent filesystem, FUSE, portable agent, agent memory, agent identity, soul.md, episodic memory, LLM, autonomous agents">
+
+  <!-- Open Graph -->
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://airine.github.io/agent-fuse/">
+  <meta property="og:title" content="AgentFS — Your agent's USB drive">
+  <meta property="og:description" content="Portable identity layer for AI agents. Mount soul, memory, and skills as a filesystem. Open source, Go, MIT.">
+  <meta property="og:site_name" content="AgentFS">
+
+  <!-- Twitter -->
+  <meta name="twitter:card" content="summary">
+  <meta name="twitter:title" content="AgentFS — Portable identity for AI agents">
+  <meta name="twitter:description" content="Mount your agent's soul, memory, and skills as a FUSE filesystem. Carry it across any environment with one command.">
+
+  <!-- Canonical -->
+  <link rel="canonical" href="https://airine.github.io/agent-fuse/">
+  <link rel="alternate" type="text/plain" title="LLMs.txt" href="https://raw.githubusercontent.com/Airine/agent-fuse/main/llms.txt">
+
+  <!-- JSON-LD structured data -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "SoftwareApplication",
+    "name": "AgentFS",
+    "alternateName": "agent-fuse",
+    "description": "Portable identity layer for AI agents. Mount your agent's soul, memory, and skills as a FUSE filesystem and carry it across any environment.",
+    "url": "https://airine.github.io/agent-fuse/",
+    "downloadUrl": "https://github.com/Airine/agent-fuse",
+    "codeRepository": "https://github.com/Airine/agent-fuse",
+    "programmingLanguage": "Go",
+    "operatingSystem": "Linux",
+    "license": "https://opensource.org/licenses/MIT",
+    "applicationCategory": "DeveloperApplication",
+    "keywords": "AI agent, FUSE filesystem, agent memory, agent identity, portable agent, soul.md, episodic memory, LLM tooling",
+    "featureList": [
+      "FUSE-mounted agent identity (soul.md, memory, skills)",
+      "Append-only episodic memory with crash recovery",
+      "Kernel-enforced read/write permissions",
+      "Concurrent-safe writes with race detection",
+      "CLI: agentfs init / mount / unmount",
+      "Plain text, 100% portable, git-diffable"
+    ],
+    "offers": {
+      "@type": "Offer",
+      "price": "0",
+      "priceCurrency": "USD"
+    }
+  }
+  </script>
+
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Martian+Mono:wght@300;400;500;600&family=Fira+Code:wght@300;400;500&display=swap" rel="stylesheet">
   <style>

@@ -1,0 +1,64 @@
+# AgentFS
+
+> Portable identity layer for AI agents. Mount your agent's soul, memory, and skills as a FUSE filesystem — carry it across any environment with one command.
+
+AgentFS is an open-source Go project that solves the "context loss" problem in AI agent development. Every time an agent moves to a new environment (different machine, sandbox, or session), it loses its memory, personality, and skills. AgentFS packages this state as a mountable FUSE filesystem so the agent always knows who it is and what it remembers.
+
+## Key concept
+
+```
+agentfs mount ./my-agent /agentfs
+```
+
+The agent reads `/agentfs/soul.md` at startup (its personality + instructions). Memory is appended to `/agentfs/mem/episodic.jsonl`. Skills live in `/agentfs/skills/`. The kernel enforces permissions — agents cannot overwrite their own identity.
+
+## File layout
+
+- `agentfs.yaml` — manifest (name, version, description)
+- `soul.md` — agent identity, read-only to agent, YAML frontmatter + Markdown body
+- `mem/episodic.jsonl` — append-only structured memory log (one JSON object per line)
+- `skills/` — SKILL.md capability files, read-only to agent
+- `logs/` — read-write audit trail
+
+## Permission model
+
+| Path | Agent | Human |
+|------|-------|-------|
+| soul.md | read-only | editable |
+| mem/episodic.jsonl | append-only | editable |
+| skills/*.md | read-only | editable |
+| logs/* | read + write | read |
+
+## Integration (2 lines)
+
+```python
+# Inject identity at startup
+soul = open("/agentfs/soul.md").read()
+system_prompt = soul + "\n\n" + your_base_prompt
+
+# Persist memory
+import json, datetime
+with open("/agentfs/mem/episodic.jsonl", "a") as f:
+    f.write(json.dumps({"ts": datetime.datetime.utcnow().isoformat()+"Z", "text": "..."}) + "\n")
+```
+
+## Technical details
+
+- Language: Go 1.26
+- FUSE library: hanwen/go-fuse v2
+- Platform: Linux (FUSE kernel module required); macOS via Docker
+- Concurrency: mutex-protected writes, race-tested with `go test -race`
+- Crash recovery: on mount, truncates episodic.jsonl to last complete newline
+- License: MIT
+
+## Links
+
+- GitHub: https://github.com/Airine/agent-fuse
+- Landing page: https://airine.github.io/agent-fuse/
+- Issues: https://github.com/Airine/agent-fuse/issues
+
+## Related projects
+
+- AgentFS by Turso — SQLite-backed agent filesystem (different approach, no soul/identity concept)
+- Hermes Agent (Nous Research) — persistent memory + auto-generated skills
+- AgentFS differs by treating the entire identity as a portable filesystem unit with kernel-enforced permissions
