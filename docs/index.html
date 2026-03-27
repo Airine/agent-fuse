@@ -1,0 +1,920 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AgentFS — Portable identity for AI agents</title>
+  <meta name="description" content="Mount your agent's soul, memory, and skills as a filesystem. Carry it across any environment with one command.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Martian+Mono:wght@300;400;500;600&family=Fira+Code:wght@300;400;500&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg:        #0b0b0b;
+      --surface:   #131313;
+      --surface2:  #1a1a1a;
+      --border:    #242424;
+      --border2:   #2e2e2e;
+      --text:      #e0e0e0;
+      --muted:     #5a5a5a;
+      --dim:       #383838;
+      --green:     #3ddc84;
+      --green-dim: #1a4a2e;
+      --amber:     #f5a623;
+      --red:       #ff5f57;
+      --blue:      #5cb8ff;
+      --purple:    #c792ea;
+      --font-mono: 'Martian Mono', monospace;
+      --font-code: 'Fira Code', monospace;
+      --radius:    4px;
+      --max-w:     820px;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: var(--font-mono);
+      font-size: 14px;
+      line-height: 1.8;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* ── Layout ── */
+    .container {
+      max-width: var(--max-w);
+      margin: 0 auto;
+      padding: 0 24px;
+    }
+
+    section { padding: 88px 0; }
+    section + section { border-top: 1px solid var(--border); }
+
+    /* ── Nav ── */
+    nav {
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      background: rgba(11,11,11,0.92);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--border);
+      padding: 14px 0;
+    }
+
+    nav .container {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .nav-logo {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--green);
+      letter-spacing: 0.05em;
+      text-decoration: none;
+    }
+
+    .nav-links {
+      display: flex;
+      gap: 28px;
+      list-style: none;
+    }
+
+    .nav-links a {
+      color: var(--muted);
+      text-decoration: none;
+      font-size: 12px;
+      letter-spacing: 0.04em;
+      transition: color 0.15s;
+    }
+    .nav-links a:hover { color: var(--text); }
+
+    .nav-gh {
+      font-size: 12px;
+      color: var(--text) !important;
+      border: 1px solid var(--border2);
+      padding: 5px 14px;
+      border-radius: var(--radius);
+      transition: border-color 0.15s, color 0.15s !important;
+    }
+    .nav-gh:hover {
+      border-color: var(--green) !important;
+      color: var(--green) !important;
+    }
+
+    /* ── Hero ── */
+    #hero {
+      padding: 120px 0 96px;
+      border-top: none;
+    }
+
+    .hero-label {
+      display: inline-block;
+      font-size: 11px;
+      letter-spacing: 0.12em;
+      color: var(--green);
+      text-transform: uppercase;
+      margin-bottom: 32px;
+      border: 1px solid var(--green-dim);
+      padding: 4px 10px;
+      border-radius: var(--radius);
+      background: rgba(61,220,132,0.05);
+    }
+
+    h1 {
+      font-size: clamp(36px, 6vw, 64px);
+      font-weight: 600;
+      line-height: 1.1;
+      letter-spacing: -0.02em;
+      color: #f0f0f0;
+      margin-bottom: 20px;
+    }
+
+    h1 span { color: var(--green); }
+
+    .hero-sub {
+      font-size: 15px;
+      color: var(--muted);
+      max-width: 520px;
+      line-height: 1.7;
+      margin-bottom: 48px;
+      font-weight: 300;
+    }
+
+    .hero-command {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      background: var(--surface);
+      border: 1px solid var(--border2);
+      border-radius: var(--radius);
+      padding: 14px 20px;
+      margin-bottom: 36px;
+      font-family: var(--font-code);
+      font-size: 14px;
+      color: var(--text);
+      cursor: pointer;
+      position: relative;
+      transition: border-color 0.15s;
+    }
+
+    .hero-command:hover { border-color: var(--green); }
+
+    .hero-command .prompt { color: var(--green); user-select: none; }
+
+    .hero-command .cursor {
+      display: inline-block;
+      width: 8px;
+      height: 16px;
+      background: var(--green);
+      vertical-align: middle;
+      margin-left: 2px;
+      animation: blink 1.2s step-end infinite;
+    }
+
+    @keyframes blink {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0; }
+    }
+
+    .copy-hint {
+      position: absolute;
+      right: 16px;
+      top: 50%;
+      transform: translateY(-50%);
+      font-size: 10px;
+      color: var(--muted);
+      letter-spacing: 0.06em;
+      opacity: 0;
+      transition: opacity 0.15s;
+    }
+    .hero-command:hover .copy-hint { opacity: 1; }
+
+    .hero-cta {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: var(--green);
+      color: #0b0b0b;
+      font-family: var(--font-mono);
+      font-size: 13px;
+      font-weight: 600;
+      padding: 11px 22px;
+      border-radius: var(--radius);
+      text-decoration: none;
+      letter-spacing: 0.03em;
+      transition: opacity 0.15s;
+    }
+    .hero-cta:hover { opacity: 0.85; }
+
+    .hero-cta svg { width: 16px; height: 16px; }
+
+    .hero-meta {
+      margin-top: 24px;
+      display: flex;
+      gap: 20px;
+      flex-wrap: wrap;
+    }
+
+    .hero-badge {
+      font-size: 11px;
+      color: var(--muted);
+      letter-spacing: 0.06em;
+    }
+    .hero-badge span { color: var(--dim); margin: 0 6px; }
+
+    /* ── Section headers ── */
+    .section-label {
+      font-size: 10px;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: 16px;
+    }
+
+    h2 {
+      font-size: 26px;
+      font-weight: 500;
+      letter-spacing: -0.01em;
+      color: #f0f0f0;
+      margin-bottom: 20px;
+      line-height: 1.3;
+    }
+
+    .section-body {
+      color: var(--muted);
+      font-size: 14px;
+      line-height: 1.9;
+      max-width: 600px;
+      font-weight: 300;
+    }
+
+    /* ── Problem ── */
+    .problem-quote {
+      margin: 40px 0;
+      padding: 24px 28px;
+      border-left: 2px solid var(--border2);
+      background: var(--surface);
+    }
+
+    .problem-quote p {
+      font-size: 16px;
+      line-height: 1.8;
+      color: #b0b0b0;
+      font-weight: 300;
+    }
+
+    .problem-list {
+      margin-top: 32px;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1px;
+      background: var(--border);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      overflow: hidden;
+    }
+
+    .problem-item {
+      background: var(--surface);
+      padding: 20px 24px;
+    }
+
+    .problem-item .label {
+      font-size: 10px;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: 8px;
+    }
+
+    .problem-item p {
+      font-size: 13px;
+      color: #888;
+      font-weight: 300;
+      line-height: 1.6;
+    }
+
+    /* ── How it works ── */
+    .works-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 24px;
+      margin-top: 40px;
+    }
+
+    .filetree {
+      background: var(--surface);
+      border: 1px solid var(--border2);
+      border-radius: var(--radius);
+      padding: 24px;
+      font-family: var(--font-code);
+      font-size: 13px;
+      line-height: 2;
+    }
+
+    .filetree-title {
+      font-size: 10px;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: 16px;
+      font-family: var(--font-mono);
+    }
+
+    .tree-dir  { color: #5cb8ff; }
+    .tree-file { color: var(--text); }
+    .tree-yaml { color: var(--amber); }
+    .tree-md   { color: #e0c97a; }
+    .tree-jsonl{ color: var(--green); }
+    .tree-log  { color: #cc8899; }
+    .tree-dim  { color: var(--muted); }
+    .tree-comment { color: var(--dim); font-size: 11px; }
+
+    .perms-table {
+      border: 1px solid var(--border2);
+      border-radius: var(--radius);
+      overflow: hidden;
+    }
+
+    .perms-table table {
+      width: 100%;
+      border-collapse: collapse;
+      font-family: var(--font-code);
+      font-size: 12px;
+    }
+
+    .perms-table th {
+      background: var(--surface2);
+      color: var(--muted);
+      font-size: 10px;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      padding: 10px 16px;
+      text-align: left;
+      font-family: var(--font-mono);
+      font-weight: 500;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .perms-table td {
+      padding: 11px 16px;
+      border-bottom: 1px solid var(--border);
+      color: var(--text);
+    }
+
+    .perms-table tr:last-child td { border-bottom: none; }
+    .perms-table tr:nth-child(even) td { background: rgba(255,255,255,0.01); }
+
+    .badge {
+      display: inline-block;
+      font-size: 10px;
+      padding: 2px 8px;
+      border-radius: 2px;
+      letter-spacing: 0.05em;
+      font-family: var(--font-mono);
+    }
+
+    .badge-read    { background: rgba(92,184,255,0.12); color: #5cb8ff; border: 1px solid rgba(92,184,255,0.2); }
+    .badge-append  { background: rgba(61,220,132,0.12); color: var(--green); border: 1px solid rgba(61,220,132,0.2); }
+    .badge-write   { background: rgba(245,166,35,0.12); color: var(--amber); border: 1px solid rgba(245,166,35,0.2); }
+    .badge-rw      { background: rgba(245,166,35,0.12); color: var(--amber); border: 1px solid rgba(245,166,35,0.2); }
+
+    .path-code {
+      font-family: var(--font-code);
+      color: var(--text);
+      font-size: 12px;
+    }
+
+    /* ── Code blocks ── */
+    .code-block {
+      background: var(--surface);
+      border: 1px solid var(--border2);
+      border-radius: var(--radius);
+      overflow: hidden;
+      margin-top: 32px;
+    }
+
+    .code-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 10px 16px;
+      background: var(--surface2);
+      border-bottom: 1px solid var(--border);
+    }
+
+    .code-lang {
+      font-size: 10px;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--muted);
+      font-family: var(--font-mono);
+    }
+
+    .code-dots {
+      display: flex;
+      gap: 6px;
+    }
+
+    .code-dots span {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: var(--border2);
+    }
+
+    pre {
+      padding: 24px;
+      overflow-x: auto;
+      font-family: var(--font-code);
+      font-size: 13px;
+      line-height: 1.9;
+    }
+
+    /* Syntax tokens */
+    .kw  { color: var(--purple); }
+    .fn  { color: #82aaff; }
+    .str { color: var(--green); }
+    .cm  { color: var(--muted); font-style: italic; }
+    .var { color: var(--text); }
+    .op  { color: var(--amber); }
+    .num { color: #f78c6c; }
+    .py-kw  { color: #c792ea; }
+    .py-fn  { color: #82aaff; }
+    .py-str { color: #c3e88d; }
+    .py-cm  { color: #546e7a; font-style: italic; }
+    .py-builtin { color: #ffcb6b; }
+
+    /* ── Roadmap ── */
+    .roadmap {
+      margin-top: 40px;
+      display: grid;
+      gap: 1px;
+      background: var(--border);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      overflow: hidden;
+    }
+
+    .phase {
+      background: var(--surface);
+      padding: 24px 28px;
+      display: grid;
+      grid-template-columns: 160px 1fr;
+      gap: 24px;
+      align-items: start;
+    }
+
+    .phase-meta { }
+
+    .phase-tag {
+      display: inline-block;
+      font-size: 10px;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      padding: 3px 10px;
+      border-radius: 2px;
+      margin-bottom: 8px;
+      font-family: var(--font-mono);
+    }
+
+    .phase-tag.now    { background: rgba(61,220,132,0.15); color: var(--green); border: 1px solid rgba(61,220,132,0.25); }
+    .phase-tag.next   { background: rgba(92,184,255,0.12); color: #5cb8ff; border: 1px solid rgba(92,184,255,0.2); }
+    .phase-tag.future { background: rgba(245,166,35,0.1); color: var(--amber); border: 1px solid rgba(245,166,35,0.2); }
+
+    .phase-name {
+      font-size: 12px;
+      color: var(--muted);
+      font-weight: 300;
+    }
+
+    .phase-items {
+      list-style: none;
+    }
+
+    .phase-items li {
+      font-size: 13px;
+      color: #888;
+      font-weight: 300;
+      padding: 3px 0;
+      display: flex;
+      align-items: baseline;
+      gap: 10px;
+    }
+
+    .phase-items li::before {
+      content: '—';
+      color: var(--dim);
+      flex-shrink: 0;
+    }
+
+    .phase-items li.active {
+      color: var(--text);
+    }
+
+    .phase-items li.active::before { color: var(--green); }
+
+    /* ── Footer ── */
+    footer {
+      border-top: 1px solid var(--border);
+      padding: 40px 0;
+    }
+
+    footer .container {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 16px;
+    }
+
+    .footer-left {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .footer-logo {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--green);
+      letter-spacing: 0.05em;
+    }
+
+    .footer-meta {
+      font-size: 11px;
+      color: var(--muted);
+      letter-spacing: 0.04em;
+    }
+
+    .footer-links {
+      display: flex;
+      gap: 20px;
+    }
+
+    .footer-links a {
+      font-size: 12px;
+      color: var(--muted);
+      text-decoration: none;
+      transition: color 0.15s;
+    }
+    .footer-links a:hover { color: var(--text); }
+
+    /* ── Fade in ── */
+    .fade-in {
+      opacity: 0;
+      transform: translateY(16px);
+      transition: opacity 0.5s ease, transform 0.5s ease;
+    }
+
+    .fade-in.visible {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    /* ── Responsive ── */
+    @media (max-width: 640px) {
+      .works-grid { grid-template-columns: 1fr; }
+      .problem-list { grid-template-columns: 1fr; }
+      .phase { grid-template-columns: 1fr; gap: 12px; }
+      h1 { font-size: 32px; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Nav -->
+  <nav>
+    <div class="container">
+      <a href="#" class="nav-logo">agentfs</a>
+      <ul class="nav-links">
+        <li><a href="#problem">Problem</a></li>
+        <li><a href="#how">How it works</a></li>
+        <li><a href="#integrate">Integrate</a></li>
+        <li><a href="#roadmap">Roadmap</a></li>
+        <li>
+          <a href="https://github.com/Airine/agent-fuse" target="_blank" class="nav-gh">
+            GitHub ↗
+          </a>
+        </li>
+      </ul>
+    </div>
+  </nav>
+
+  <!-- Hero -->
+  <section id="hero">
+    <div class="container">
+      <div class="hero-label">Open source · MIT · Linux</div>
+
+      <h1>Your agent's<br><span>USB drive.</span></h1>
+
+      <p class="hero-sub">
+        Mount your agent's soul, memory, and skills as a filesystem.
+        Carry it across any environment — any machine, any sandbox,
+        any session.
+      </p>
+
+      <div class="hero-command" onclick="copyCommand(this)" title="Click to copy">
+        <span class="prompt">$</span>
+        <span>agentfs mount ./my-agent /agentfs</span>
+        <span class="cursor"></span>
+        <span class="copy-hint">COPY</span>
+      </div>
+
+      <br>
+
+      <a href="https://github.com/Airine/agent-fuse" target="_blank" class="hero-cta">
+        <svg viewBox="0 0 24 24" fill="currentColor">
+          <path d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.531 1.032 1.531 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z"/>
+        </svg>
+        View on GitHub
+      </a>
+
+      <div class="hero-meta">
+        <span class="hero-badge">Go 1.26</span>
+        <span class="hero-badge"><span>·</span> FUSE</span>
+        <span class="hero-badge"><span>·</span> race-tested</span>
+        <span class="hero-badge"><span>·</span> 40 tests passing</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- Problem -->
+  <section id="problem">
+    <div class="container fade-in">
+      <div class="section-label">// the problem</div>
+      <h2>Agents forget who they are.</h2>
+
+      <div class="problem-quote">
+        <p>
+          Every time your agent moves to a new environment, it loses context.
+          Memory, personality, skills — gone. Developers are duct-taping agent
+          state together across sessions with no standard format.
+        </p>
+      </div>
+
+      <div class="problem-list">
+        <div class="problem-item">
+          <div class="label">Today</div>
+          <p>Hardcode personality into every system prompt. Copy-paste tool configs across environments. Lose memory on session end.</p>
+        </div>
+        <div class="problem-item">
+          <div class="label">With AgentFS</div>
+          <p>One identity directory. Mount it anywhere. Your agent knows who it is, what it remembers, and what it can do — instantly.</p>
+        </div>
+        <div class="problem-item">
+          <div class="label">Today</div>
+          <p>Re-define agent personality in every deployment. Build custom skill registries per team with no sharing.</p>
+        </div>
+        <div class="problem-item">
+          <div class="label">With AgentFS</div>
+          <p>Plain files. Git-diffable. Human-readable. <code style="font-family:var(--font-code);color:var(--green);font-size:12px">git clone</code> your agent. Share soul.md on GitHub.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- How it works -->
+  <section id="how">
+    <div class="container fade-in">
+      <div class="section-label">// how it works</div>
+      <h2>One directory. Everything your agent needs.</h2>
+      <p class="section-body">
+        AgentFS mounts a local directory as a FUSE filesystem with enforced
+        permissions. Read-only where it matters. Append-only where memory grows.
+        The kernel enforces the rules — no agent can overwrite its own soul.
+      </p>
+
+      <div class="works-grid">
+        <div class="filetree">
+          <div class="filetree-title">// directory layout</div>
+<span class="tree-dir">my-agent/</span>
+  <span class="tree-dim">├─</span> <span class="tree-yaml">agentfs.yaml</span>      <span class="tree-comment"># manifest</span>
+  <span class="tree-dim">├─</span> <span class="tree-md">soul.md</span>           <span class="tree-comment"># identity</span>
+  <span class="tree-dim">├─</span> <span class="tree-dir">mem/</span>
+  <span class="tree-dim">│  └─</span> <span class="tree-jsonl">episodic.jsonl</span>  <span class="tree-comment"># memory</span>
+  <span class="tree-dim">├─</span> <span class="tree-dir">skills/</span>
+  <span class="tree-dim">│  └─</span> <span class="tree-md">web-search.md</span>  <span class="tree-comment"># skills</span>
+  <span class="tree-dim">└─</span> <span class="tree-dir">logs/</span>
+     <span class="tree-dim">└─</span> <span class="tree-log">session.log</span>    <span class="tree-comment"># audit</span>
+        </div>
+
+        <div class="perms-table">
+          <table>
+            <thead>
+              <tr>
+                <th>Path</th>
+                <th>Agent</th>
+                <th>Human</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><span class="path-code">soul.md</span></td>
+                <td><span class="badge badge-read">read</span></td>
+                <td><span class="badge badge-write">edit</span></td>
+              </tr>
+              <tr>
+                <td><span class="path-code">mem/episodic.jsonl</span></td>
+                <td><span class="badge badge-append">append</span></td>
+                <td><span class="badge badge-write">edit</span></td>
+              </tr>
+              <tr>
+                <td><span class="path-code">skills/*.md</span></td>
+                <td><span class="badge badge-read">read</span></td>
+                <td><span class="badge badge-write">edit</span></td>
+              </tr>
+              <tr>
+                <td><span class="path-code">logs/*</span></td>
+                <td><span class="badge badge-rw">read + write</span></td>
+                <td><span class="badge badge-read">read</span></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="code-block" style="margin-top: 24px;">
+        <div class="code-header">
+          <span class="code-lang">soul.md</span>
+          <div class="code-dots"><span></span><span></span><span></span></div>
+        </div>
+        <pre><span class="cm">---</span>
+<span class="kw">name:</span> <span class="str">ResearchAgent</span>
+<span class="kw">version:</span> <span class="str">1.0</span>
+<span class="kw">created:</span> <span class="str">2026-03-27</span>
+<span class="cm">---</span>
+
+<span class="fn"># Identity</span>
+<span class="var">You are a research assistant specializing in technical due diligence.
+You are thorough, skeptical, and always cite your sources.</span>
+
+<span class="fn"># Behavioral rules</span>
+<span class="var">- Always verify claims with at least 2 sources
+- Flag uncertainty explicitly
+- Prefer primary sources over summaries</span></pre>
+      </div>
+    </div>
+  </section>
+
+  <!-- Integrate -->
+  <section id="integrate">
+    <div class="container fade-in">
+      <div class="section-label">// integration</div>
+      <h2>Two lines. Any framework.</h2>
+      <p class="section-body">
+        AgentFS is framework-agnostic. It's a filesystem — your agent uses it
+        the same way it opens any file. No SDK. No API key. No vendor lock-in.
+      </p>
+
+      <div class="code-block">
+        <div class="code-header">
+          <span class="code-lang">Python · startup</span>
+          <div class="code-dots"><span></span><span></span><span></span></div>
+        </div>
+        <pre><span class="py-cm"># Inject soul into system prompt at startup</span>
+<span class="py-kw">with</span> <span class="py-builtin">open</span>(<span class="py-str">"/agentfs/soul.md"</span>) <span class="py-kw">as</span> f:
+    soul = f.read()
+
+system_prompt = soul + <span class="py-str">"\n\n"</span> + your_base_prompt</pre>
+      </div>
+
+      <div class="code-block">
+        <div class="code-header">
+          <span class="code-lang">Python · memory</span>
+          <div class="code-dots"><span></span><span></span><span></span></div>
+        </div>
+        <pre><span class="py-cm"># Append a memory entry after each session</span>
+<span class="py-kw">import</span> json, datetime
+
+entry = {
+    <span class="py-str">"ts"</span>:   datetime.datetime.utcnow().isoformat() + <span class="py-str">"Z"</span>,
+    <span class="py-str">"text"</span>: <span class="py-str">"Completed competitive analysis of AgentFS vs Hermes"</span>,
+    <span class="py-str">"tags"</span>: [<span class="py-str">"research"</span>, <span class="py-str">"decision"</span>],
+}
+
+<span class="py-kw">with</span> <span class="py-builtin">open</span>(<span class="py-str">"/agentfs/mem/episodic.jsonl"</span>, <span class="py-str">"a"</span>) <span class="py-kw">as</span> f:
+    f.write(json.dumps(entry) + <span class="py-str">"\n"</span>)</pre>
+      </div>
+
+      <div class="code-block">
+        <div class="code-header">
+          <span class="code-lang">Shell · setup</span>
+          <div class="code-dots"><span></span><span></span><span></span></div>
+        </div>
+        <pre><span class="cm"># Install</span>
+<span class="var">go install github.com/aaron/agent-fuse/cmd/agentfs@latest</span>
+
+<span class="cm"># Create an identity</span>
+<span class="var">agentfs init ./my-agent</span>
+
+<span class="cm"># Mount</span>
+<span class="var">agentfs mount ./my-agent /agentfs</span>
+
+<span class="cm"># Unmount</span>
+<span class="var">fusermount -u /agentfs</span></pre>
+      </div>
+    </div>
+  </section>
+
+  <!-- Roadmap -->
+  <section id="roadmap">
+    <div class="container fade-in">
+      <div class="section-label">// roadmap</div>
+      <h2>Phase 1 ships now.</h2>
+      <p class="section-body">
+        Open-core model. The OSS core builds adoption and trust.
+        The commercial layer follows when there are real users with
+        real agents to protect.
+      </p>
+
+      <div class="roadmap">
+        <div class="phase">
+          <div class="phase-meta">
+            <div class="phase-tag now">Now</div>
+            <div class="phase-name">Phase 1 · Core</div>
+          </div>
+          <ul class="phase-items">
+            <li class="active">soul.md identity layer</li>
+            <li class="active">episodic.jsonl memory with crash recovery</li>
+            <li class="active">skills/ directory (SKILL.md format)</li>
+            <li class="active">FUSE mount on Linux</li>
+            <li class="active">agentfs init / mount / unmount CLI</li>
+            <li class="active">Kernel-enforced permissions</li>
+          </ul>
+        </div>
+
+        <div class="phase">
+          <div class="phase-meta">
+            <div class="phase-tag next">Phase 2</div>
+            <div class="phase-name">Ecosystem</div>
+          </div>
+          <ul class="phase-items">
+            <li>LangChain / CrewAI / AutoGen adapters</li>
+            <li>macOS native (macFUSE or NFS)</li>
+            <li>SQLite semantic memory</li>
+            <li>episodic.jsonl pruning + LLM summarization</li>
+            <li>Hermes Agent SKILL.md compatibility</li>
+          </ul>
+        </div>
+
+        <div class="phase">
+          <div class="phase-meta">
+            <div class="phase-tag future">Commercial</div>
+            <div class="phase-name">Platform</div>
+          </div>
+          <ul class="phase-items">
+            <li>Hosted sync — carry your agent across machines</li>
+            <li>Team-shared identities</li>
+            <li>Enterprise audit + compliance logs</li>
+            <li>Skill IP protection (black-box FUSE execution)</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer>
+    <div class="container">
+      <div class="footer-left">
+        <div class="footer-logo">agentfs</div>
+        <div class="footer-meta">MIT License · Built with Go + FUSE</div>
+      </div>
+      <div class="footer-links">
+        <a href="https://github.com/Airine/agent-fuse" target="_blank">GitHub</a>
+        <a href="https://github.com/Airine/agent-fuse/issues" target="_blank">Issues</a>
+        <a href="https://github.com/Airine/agent-fuse/blob/main/README.md" target="_blank">Docs</a>
+      </div>
+    </div>
+  </footer>
+
+  <script>
+    // Copy command on click
+    function copyCommand(el) {
+      const cmd = 'agentfs mount ./my-agent /agentfs';
+      navigator.clipboard.writeText(cmd).then(() => {
+        const hint = el.querySelector('.copy-hint');
+        hint.textContent = 'COPIED';
+        setTimeout(() => hint.textContent = 'COPY', 1500);
+      });
+    }
+
+    // Fade-in on scroll
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(e => {
+        if (e.isIntersecting) {
+          e.target.classList.add('visible');
+          observer.unobserve(e.target);
+        }
+      });
+    }, { threshold: 0.1 });
+
+    document.querySelectorAll('.fade-in').forEach(el => observer.observe(el));
+  </script>
+</body>
+</html>
