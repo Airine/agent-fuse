@@ -313,7 +313,16 @@
       padding: 24px;
       font-family: var(--font-code);
       font-size: 13px;
+      overflow-x: auto;
+    }
+
+    .filetree pre {
+      padding: 0;
+      font-family: var(--font-code);
+      font-size: 13px;
       line-height: 2;
+      background: none;
+      border: none;
     }
 
     .filetree-title {
@@ -692,15 +701,15 @@
       <div class="works-grid">
         <div class="filetree">
           <div class="filetree-title">// directory layout</div>
-<span class="tree-dir">my-agent/</span>
-  <span class="tree-dim">├─</span> <span class="tree-yaml">agentfs.yaml</span>      <span class="tree-comment"># manifest</span>
-  <span class="tree-dim">├─</span> <span class="tree-md">soul.md</span>           <span class="tree-comment"># identity</span>
-  <span class="tree-dim">├─</span> <span class="tree-dir">mem/</span>
-  <span class="tree-dim">│  └─</span> <span class="tree-jsonl">episodic.jsonl</span>  <span class="tree-comment"># memory</span>
-  <span class="tree-dim">├─</span> <span class="tree-dir">skills/</span>
-  <span class="tree-dim">│  └─</span> <span class="tree-md">web-search.md</span>  <span class="tree-comment"># skills</span>
-  <span class="tree-dim">└─</span> <span class="tree-dir">logs/</span>
-     <span class="tree-dim">└─</span> <span class="tree-log">session.log</span>    <span class="tree-comment"># audit</span>
+          <pre><span class="tree-dir">my-agent/</span>
+<span class="tree-dim">├─</span> <span class="tree-yaml">agentfs.yaml</span>     <span class="tree-comment"># manifest</span>
+<span class="tree-dim">├─</span> <span class="tree-md">soul.md</span>          <span class="tree-comment"># identity</span>
+<span class="tree-dim">├─</span> <span class="tree-dir">mem/</span>
+<span class="tree-dim">│  └─</span> <span class="tree-jsonl">episodic.jsonl</span> <span class="tree-comment"># memory</span>
+<span class="tree-dim">├─</span> <span class="tree-dir">skills/</span>
+<span class="tree-dim">│  └─</span> <span class="tree-md">web-search.md</span>  <span class="tree-comment"># skills</span>
+<span class="tree-dim">└─</span> <span class="tree-dir">logs/</span>
+<span class="tree-dim">   └─</span> <span class="tree-log">session.log</span>    <span class="tree-comment"># audit</span></pre>
         </div>
 
         <div class="perms-table">
